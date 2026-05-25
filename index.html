@@ -1,377 +1,475 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>웹 코드 스토리지 매니저</title>
-    <style>
-        :root {
-            --primary-color: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg-color: #f9fafb;
-            --card-bg: #ffffff;
-            --text-main: #111827;
-            --text-muted: #4b5563;
-            --border-color: #e5e7eb;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>웹 소스 파일 저장기</title>
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+<!-- ZIP 생성 라이브러리 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding: 2rem;
-            line-height: 1.5;
-        }
+<style>
+:root{
+  --primary:#10b981;
+  --primaryHover:#059669;
+  --bg:#f3f4f6;
+  --card:#ffffff;
+  --border:#d1d5db;
+  --text:#111827;
+  --muted:#6b7280;
+}
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial, sans-serif;
+}
 
-        header {
-            margin-bottom: 2rem;
-            text-align: center;
-        }
+body{
+  background:var(--bg);
+  color:var(--text);
+  padding:20px;
+}
 
-        header h1 {
-            font-size: 2rem;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
+.container{
+  max-width:1000px;
+  margin:0 auto;
+}
 
-        header p {
-            color: var(--text-muted);
-        }
+h1{
+  text-align:center;
+  color:var(--primary);
+  margin-bottom:12px;
+}
 
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            margin-bottom: 2rem;
-        }
+.sub-text{
+  text-align:center;
+  color:var(--muted);
+  margin-bottom:24px;
+  line-height:1.6;
+}
 
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
+.card{
+  background:var(--card);
+  border-radius:18px;
+  padding:24px;
+  box-shadow:0 8px 24px rgba(0,0,0,.08);
+}
 
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--text-main);
-        }
+.info{
+  background:#ecfdf5;
+  border-left:5px solid var(--primary);
+  padding:16px;
+  border-radius:10px;
+  margin-bottom:20px;
+  color:#065f46;
+  line-height:1.7;
+}
 
-        input[type="text"] {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 1rem;
-            transition: border-color 0.2s;
-        }
+.input-wrap{
+  margin-bottom:20px;
+}
 
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
+.input-wrap label{
+  display:block;
+  margin-bottom:8px;
+  font-weight:bold;
+}
 
-        .editor-tabs {
-            display: flex;
-            border-bottom: 2px solid var(--border-color);
-            margin-bottom: 1rem;
-        }
+.input-wrap input{
+  width:100%;
+  padding:14px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  font-size:16px;
+}
 
-        .tab-btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            background: none;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            color: var(--text-muted);
-            border-bottom: 2px solid transparent;
-            margin-bottom: -2px;
-        }
+.tabs{
+  display:flex;
+  gap:8px;
+  margin-bottom:12px;
+}
 
-        .tab-btn.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
-            font-weight: 600;
-        }
+.tab{
+  flex:1;
+  border:none;
+  background:#e5e7eb;
+  padding:14px;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:.2s;
+}
 
-        .editor-container {
-            position: relative;
-        }
+.tab.active{
+  background:var(--primary);
+  color:white;
+}
 
-        .code-textarea {
-            width: 100%;
-            height: 350px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.95rem;
-            padding: 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background-color: #1e1e1e;
-            color: #d4d4d4;
-            resize: vertical;
-            display: none;
-        }
+textarea{
+  width:100%;
+  height:420px;
+  display:none;
+  resize:vertical;
+  border:none;
+  border-radius:12px;
+  padding:16px;
+  background:#1e1e1e;
+  color:#d4d4d4;
+  font-size:14px;
+  font-family:Consolas, monospace;
+}
 
-        .code-textarea.active {
-            display: block;
-        }
+textarea.active{
+  display:block;
+}
 
-        .btn-submit {
-            display: block;
-            width: 100%;
-            padding: 1rem;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
+.btn{
+  width:100%;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  transition:.2s;
+}
 
-        .btn-submit:hover {
-            background-color: var(--primary-hover);
-        }
+.btn-smart{
+  margin-top:18px;
+  padding:18px;
+  background:var(--primary);
+  color:white;
+  font-size:18px;
+  font-weight:bold;
+}
 
-        /* 저장된 목록 스타일 */
-        .history-section h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
+.btn-smart:hover{
+  background:var(--primaryHover);
+}
 
-        .folder-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1rem;
-        }
+.btn-pc{
+  margin-top:12px;
+  padding:16px;
+  background:white;
+  color:var(--primaryHover);
+  border:2px solid var(--primary);
+  font-size:16px;
+  font-weight:bold;
+}
 
-        .folder-card {
-            background: white;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1.25rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .folder-info h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .folder-info p {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        .folder-actions button {
-            padding: 0.4rem 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background: none;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-
-        .folder-actions .btn-load {
-            color: var(--primary-color);
-            border-color: var(--primary-color);
-            margin-right: 0.5rem;
-        }
-
-        .folder-actions .btn-load:hover {
-            background-color: rgba(79, 70, 229, 0.05);
-        }
-
-        .folder-actions .btn-delete {
-            color: #ef4444;
-            border-color: #ef4444;
-        }
-
-        .folder-actions .btn-delete:hover {
-            background-color: rgba(239, 68, 68, 0.05);
-        }
-    </style>
+.status{
+  margin-top:18px;
+  background:#f9fafb;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:14px;
+  color:var(--muted);
+  line-height:1.5;
+  font-size:14px;
+}
+</style>
 </head>
+
 <body>
 
 <div class="container">
-    <header>
-        <h1>Code Storage Manager</h1>
-        <p>프로젝트별로 index.html, script.js, style.css 코드를 브라우저에 저장하세요.</p>
-    </header>
 
-    <div class="card">
-        <!-- 폴더 이름 입력 -->
-        <div class="form-group">
-            <label for="folderName">프로젝트 폴더 이름</label>
-            <input type="text" id="folderName" placeholder="예: my-awesome-project" autocomplete="off">
-        </div>
+  <h1>Web Code Exporter</h1>
 
-        <!-- 에디터 탭 메뉴 -->
-        <div class="editor-tabs">
-            <button class="tab-btn active" onclick="switchTab('html')">index.html</button>
-            <button class="tab-btn" onclick="switchTab('css')">style.css</button>
-            <button class="tab-btn" onclick="switchTab('js')">script.js</button>
-        </div>
+  <p class="sub-text">
+    프로젝트별로 HTML, CSS, JavaScript 파일을 ZIP 또는 폴더 형태로 저장하세요.
+  </p>
 
-        <!-- 코드 입력 영역 -->
-        <div class="editor-container">
-            <textarea id="codeHtml" class="code-textarea active" placeholder="<!-- HTML 코드를 입력하세요 -->&#10;<!DOCTYPE html>&#10;<html>...</html>"></textarea>
-            <textarea id="codeCss" class="code-textarea" placeholder="/* CSS 코드를 입력하세요 */&#10;body { background: #fff; }"></textarea>
-            <textarea id="codeJs" class="code-textarea" placeholder="// JavaScript 코드를 입력하세요&#10;console.log('Hello World');"></textarea>
-        </div>
+  <div class="card">
 
-        <button class="btn-submit" onclick="saveToStorage()" style="margin-top: 1.5rem;">스토리지에 저장하기</button>
+    <div class="info">
+      <strong>사용 방법</strong><br><br>
+
+      📱 스마트폰:<br>
+      ZIP 파일로 다운로드 저장됩니다.<br><br>
+
+      💻 PC Chrome / Edge:<br>
+      선택한 위치에 새 프로젝트 폴더를 만들고<br>
+      index.html / style.css / script.js 파일이 저장됩니다.
     </div>
 
-    <!-- 저장된 폴더 목록 -->
-    <div class="history-section">
-        <h2>저장된 프로젝트 폴더 목록</h2>
-        <div class="folder-list" id="folderList">
-            <!-- 자바스크립트로 동적 생성됨 -->
-        </div>
+    <div class="input-wrap">
+      <label>프로젝트 폴더 이름</label>
+      <input id="projectName" value="MyWebProject" placeholder="예: Liquid-GUI-App">
     </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('html', this)">index.html</button>
+      <button class="tab" onclick="showTab('css', this)">style.css</button>
+      <button class="tab" onclick="showTab('js', this)">script.js</button>
+    </div>
+
+<textarea id="htmlCode" class="active"><!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My App</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <h1>안녕하세요!</h1>
+  <p>파일 저장 테스트입니다.</p>
+
+  <script src="script.js"></script>
+
+</body>
+</html></textarea>
+
+<textarea id="cssCode">body{
+  margin:0;
+  padding:40px;
+  background:#f3f4f6;
+  color:#111827;
+  font-family:Arial,sans-serif;
+  text-align:center;
+}
+
+h1{
+  color:#10b981;
+}</textarea>
+
+<textarea id="jsCode">console.log("script.js 연결 완료");
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+  alert("앱이 정상 실행되었습니다.");
+
+});</textarea>
+
+    <button class="btn btn-smart" onclick="saveSmartphone()">
+      📱 스마트폰용 ZIP 다운로드 저장
+    </button>
+
+    <button class="btn btn-pc" onclick="savePC()">
+      💻 PC용 새 폴더 생성 후 저장
+    </button>
+
+    <div id="status" class="status">
+      대기 중입니다.
+    </div>
+
+  </div>
 </div>
 
 <script>
-    // 탭 전환 기능
-    function switchTab(type) {
-        // 모든 탭 버튼 및 텍스트 영역 비활성화
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.code-textarea').forEach(tx => tx.classList.remove('active'));
+function showTab(type, btn){
 
-        // 선택한 영역 활성화
-        if (type === 'html') {
-            document.querySelector('button[onclick="switchTab(\'html\')"]').classList.add('active');
-            document.getElementById('codeHtml').classList.add('active');
-        } else if (type === 'css') {
-            document.querySelector('button[onclick="switchTab(\'css\')"]').classList.add('active');
-            document.getElementById('codeCss').classList.add('active');
-        } else if (type === 'js') {
-            document.querySelector('button[onclick="switchTab(\'js\')"]').classList.add('active');
-            document.getElementById('codeJs').classList.add('active');
-        }
+  document.querySelectorAll(".tab").forEach(tab=>{
+    tab.classList.remove("active");
+  });
+
+  document.querySelectorAll("textarea").forEach(area=>{
+    area.classList.remove("active");
+  });
+
+  btn.classList.add("active");
+
+  if(type==="html"){
+    document.getElementById("htmlCode").classList.add("active");
+  }
+
+  if(type==="css"){
+    document.getElementById("cssCode").classList.add("active");
+  }
+
+  if(type==="js"){
+    document.getElementById("jsCode").classList.add("active");
+  }
+}
+
+function cleanName(name){
+
+  return name
+    .trim()
+    .replace(/[\\/:*?"<>|]/g,"-")
+    .replace(/\s+/g,"_") || "MyWebProject";
+}
+
+function getProjectData(){
+
+  return{
+    projectName:cleanName(
+      document.getElementById("projectName").value
+    ),
+
+    html:document.getElementById("htmlCode").value,
+
+    css:document.getElementById("cssCode").value,
+
+    js:document.getElementById("jsCode").value
+  };
+}
+
+async function saveSmartphone(){
+
+  const status=document.getElementById("status");
+
+  try{
+
+    status.textContent="ZIP 파일 생성 중입니다.";
+
+    const data=getProjectData();
+
+    const zip=new JSZip();
+
+    const folder=zip.folder(data.projectName);
+
+    folder.file("index.html",data.html);
+    folder.file("style.css",data.css);
+    folder.file("script.js",data.js);
+
+    const blob=await zip.generateAsync({
+      type:"blob"
+    });
+
+    const url=URL.createObjectURL(blob);
+
+    const a=document.createElement("a");
+
+    a.href=url;
+    a.download=data.projectName + ".zip";
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+    setTimeout(()=>{
+      URL.revokeObjectURL(url);
+    },1000);
+
+    status.textContent=
+      "완료: ZIP 파일이 다운로드되었습니다. 파일 앱에서 압축을 해제하세요.";
+
+  }catch(error){
+
+    console.error(error);
+
+    status.textContent=
+      "오류: ZIP 저장 중 문제가 발생했습니다.";
+
+    alert("ZIP 생성 실패");
+  }
+}
+
+async function savePC(){
+
+  const status=document.getElementById("status");
+
+  if(!window.showDirectoryPicker){
+
+    alert(
+      "현재 브라우저는 폴더 직접 저장을 지원하지 않습니다.\n\n스마트폰에서는 ZIP 다운로드 버튼을 사용하세요."
+    );
+
+    return;
+  }
+
+  try{
+
+    status.textContent=
+      "부모 폴더를 선택하세요.";
+
+    const data=getProjectData();
+
+    const parentFolder=
+      await window.showDirectoryPicker({
+        mode:"readwrite"
+      });
+
+    status.textContent=
+      "프로젝트 폴더 생성 중입니다.";
+
+    const projectFolder=
+      await parentFolder.getDirectoryHandle(
+        data.projectName,
+        {create:true}
+      );
+
+    status.textContent=
+      "파일 저장 중입니다.";
+
+    await writeFile(
+      projectFolder,
+      "index.html",
+      data.html
+    );
+
+    await writeFile(
+      projectFolder,
+      "style.css",
+      data.css
+    );
+
+    await writeFile(
+      projectFolder,
+      "script.js",
+      data.js
+    );
+
+    status.textContent=
+      "완료: 새 폴더와 3개 파일 저장이 완료되었습니다.";
+
+    alert(
+      "🎉 저장 완료!\n\n" +
+      data.projectName +
+      " 폴더 안에\n\n" +
+      "- index.html\n" +
+      "- style.css\n" +
+      "- script.js\n\n" +
+      "파일이 저장되었습니다."
+    );
+
+  }catch(error){
+
+    console.error(error);
+
+    if(error.name==="AbortError"){
+
+      status.textContent=
+        "사용자가 폴더 선택을 취소했습니다.";
+
+    }else{
+
+      status.textContent=
+        "오류: 파일 저장 실패";
+
+      alert(
+        "파일 저장 중 오류가 발생했습니다."
+      );
     }
+  }
+}
 
-    // 로컬 스토리지 저장 기능
-    function saveToStorage() {
-        const folderName = document.getElementById('folderName').value.trim();
-        const htmlContent = document.getElementById('codeHtml').value;
-        const cssContent = document.getElementById('codeCss').value;
-        const jsContent = document.getElementById('codeJs').value;
+async function writeFile(
+  folderHandle,
+  fileName,
+  content
+){
 
-        if (!folderName) {
-            alert('폴더 이름을 입력해 주세요.');
-            document.getElementById('folderName').focus();
-            return;
-        }
+  const fileHandle=
+    await folderHandle.getFileHandle(
+      fileName,
+      {create:true}
+    );
 
-        // 하나의 객체로 데이터 구조화
-        const projectData = {
-            folderName: folderName,
-            updatedAt: new Date().toLocaleString(),
-            files: {
-                'index.html': htmlContent,
-                'style.css': cssContent,
-                'script.js': jsContent
-            }
-        };
+  const writable=
+    await fileHandle.createWritable();
 
-        // 로컬 스토리지에 'code_project_[폴더명]' 키로 저장
-        localStorage.setItem(`code_project_${folderName}`, JSON.stringify(projectData));
-        
-        alert(`'${folderName}' 폴더 내에 3개 파일이 안전하게 저장되었습니다.`);
-        
-        // 입력 폼 초기화 및 목록 갱신
-        document.getElementById('folderName').value = '';
-        document.getElementById('codeHtml').value = '';
-        document.getElementById('codeCss').value = '';
-        document.getElementById('codeJs').value = '';
-        switchTab('html');
-        
-        renderFolderList();
-    }
+  await writable.write(content);
 
-    // 저장된 폴더 리스트 불러와서 화면에 그리기
-    function renderFolderList() {
-        const folderListContainer = document.getElementById('folderList');
-        folderListContainer.innerHTML = '';
-
-        let hasItems = false;
-
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            
-            // 본 프로그램에서 정의한 키 값만 필터링
-            if (key.startsWith('code_project_')) {
-                hasItems = true;
-                const project = JSON.parse(localStorage.getItem(key));
-                
-                const folderCard = document.createElement('div');
-                folderCard.className = 'folder-card';
-                folderCard.innerHTML = `
-                    <div class="folder-info">
-                        <h3>📁 ${project.folderName}</h3>
-                        <p>저장일: ${project.updatedAt}</p>
-                    </div>
-                    <div class="folder-actions">
-                        <button class="btn-load" onclick="loadProject('${project.folderName}')">불러오기</button>
-                        <button class="btn-delete" onclick="deleteProject('${project.folderName}')">삭제</button>
-                    </div>
-                `;
-                folderListContainer.appendChild(folderCard);
-            }
-        }
-
-        if (!hasItems) {
-            folderListContainer.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center; padding: 2rem;">저장된 폴더가 없습니다.</p>';
-        }
-    }
-
-    // 특정 프로젝트 불러오기
-    function loadProject(folderName) {
-        const data = localStorage.getItem(`code_project_${folderName}`);
-        if (!data) return;
-
-        const project = JSON.parse(data);
-        
-        document.getElementById('folderName').value = project.folderName;
-        document.getElementById('codeHtml').value = project.files['index.html'] || '';
-        document.getElementById('codeCss').value = project.files['style.css'] || '';
-        document.getElementById('codeJs').value = project.files['script.js'] || '';
-        
-        switchTab('html');
-        alert(`'${folderName}' 프로젝트를 에디터로 불러왔습니다.`);
-    }
-
-    // 특정 프로젝트 삭제
-    function deleteProject(folderName) {
-        if (confirm(`'${folderName}' 프로젝트를 영구 삭제하시겠습니까?`)) {
-            localStorage.removeItem(`code_project_${folderName}`);
-            renderFolderList();
-        }
-    }
-
-    // 페이지 로드 시 목록 자동 출력
-    window.onload = renderFolderList;
+  await writable.close();
+}
 </script>
+
 </body>
 </html>
